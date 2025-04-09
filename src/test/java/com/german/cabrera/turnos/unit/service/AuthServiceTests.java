@@ -1,15 +1,17 @@
 package com.german.cabrera.turnos.unit.service;
 
 import com.german.cabrera.turnos.builder.UsuarioBuilder;
-import com.german.cabrera.turnos.security.service.JwtService;
 import com.german.cabrera.turnos.dto.AuthRequest;
 import com.german.cabrera.turnos.dto.AuthResponse;
 import com.german.cabrera.turnos.model.Usuario;
 import com.german.cabrera.turnos.repository.UsuarioRepository;
+import com.german.cabrera.turnos.security.service.JwtService;
 import com.german.cabrera.turnos.service.AuthService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,8 +19,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class AuthServiceTests {
 
     @Mock
@@ -32,11 +36,6 @@ class AuthServiceTests {
 
     @InjectMocks
     private AuthService authService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @Test
     void login_DeberiaRetornarTokenSiCredencialesSonValidas() {

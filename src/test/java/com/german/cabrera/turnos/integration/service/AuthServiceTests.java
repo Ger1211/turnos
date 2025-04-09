@@ -4,27 +4,17 @@ package com.german.cabrera.turnos.integration.service;
 import com.german.cabrera.turnos.builder.UsuarioBuilder;
 import com.german.cabrera.turnos.dto.AuthRequest;
 import com.german.cabrera.turnos.dto.AuthResponse;
-import com.german.cabrera.turnos.repository.UsuarioRepository;
 import com.german.cabrera.turnos.service.AuthService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
-@ActiveProfiles("test")
-@Transactional
-public class AuthServiceTests {
+public class AuthServiceTests extends IntegrationTests {
     @Autowired
     private AuthService authService;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -52,9 +42,7 @@ public class AuthServiceTests {
         UsuarioBuilder.basic().cliente().withEmail(email).withPassword(passwordEncoder.encode(password)).build(entityManager);
         AuthRequest request = new AuthRequest("usuario@test.com", "wrong");
 
-        Exception exception = assertThrows(Exception.class, () -> {
-            authService.login(request);
-        });
+        Exception exception = assertThrows(Exception.class, () -> authService.login(request));
 
         assertTrue(exception.getMessage().contains("Bad credentials"));
     }

@@ -20,6 +20,11 @@ public class UsuarioBuilder extends AbstractPersistenceBuilder<Usuario> {
         return this;
     }
 
+    public UsuarioBuilder profesional() {
+        instance.setRoles(Set.of("Profesional"));
+        return this;
+    }
+
     public UsuarioBuilder withEmail(String email) {
         instance.setEmail(email);
         return this;
