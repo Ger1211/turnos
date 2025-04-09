@@ -1,5 +1,6 @@
 package com.german.cabrera.turnos.builder;
 
+import com.german.cabrera.turnos.model.Cliente;
 import com.german.cabrera.turnos.model.EstadoTurno;
 import com.german.cabrera.turnos.model.Profesional;
 import com.german.cabrera.turnos.model.Turno;
@@ -21,6 +22,11 @@ public class TurnoBuilder extends AbstractPersistenceBuilder<Turno> {
 
     public TurnoBuilder withEstado(EstadoTurno estadoTurno) {
         this.instance.setEstado(estadoTurno);
+        return this;
+    }
+
+    public TurnoBuilder withCliente(Cliente cliente) {
+        this.instance.setCliente(cliente);
         return this;
     }
 }

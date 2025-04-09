@@ -32,7 +32,7 @@ public class TurnoServiceTests extends IntegrationTests {
     private TurnoRepository turnoRepository;
 
     @Test
-    void reservarTurno_ReservaExitosa() {
+    void reservar_ReservaExitosa() {
         Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
@@ -40,7 +40,7 @@ public class TurnoServiceTests extends IntegrationTests {
         LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
         TurnoBuilder.basic(profesional, fechaHora).withEstado(EstadoTurno.DISPONIBLE).build(entityManager);
 
-        Turno turno = turnoService.reservarTurno(cliente.getId(), profesional.getId(), fechaHora);
+        Turno turno = turnoService.reservar(cliente.getId(), profesional.getId(), fechaHora);
 
         assertNotNull(turno);
         assertEquals(cliente.getId(), turno.getCliente().getId());
@@ -53,7 +53,7 @@ public class TurnoServiceTests extends IntegrationTests {
     }
 
     @Test
-    void reservarTurno_CuandoTurnoNoExiste_DeberiaLanzarExcepcion() {
+    void reservarTurno_CuandoNoExiste_DeberiaLanzarExcepcion() {
         Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
@@ -65,14 +65,14 @@ public class TurnoServiceTests extends IntegrationTests {
 
         EntityNotFoundException ex = assertThrows(
                 EntityNotFoundException.class,
-                () -> turnoService.reservarTurno(cliente.getId(), profesional.getId(), fechaErronea)
+                () -> turnoService.reservar(cliente.getId(), profesional.getId(), fechaErronea)
         );
 
         assertEquals("Turno no encontrado para ese profesional en esa fecha y hora", ex.getMessage());
     }
 
     @Test
-    void reservarTurno_CuandoProfesionalNoExiste_DeberiaLanzarExcepcion() {
+    void reservar_CuandoProfesionalNoExiste_DeberiaLanzarExcepcion() {
         Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
@@ -83,14 +83,14 @@ public class TurnoServiceTests extends IntegrationTests {
 
         EntityNotFoundException ex = assertThrows(
                 EntityNotFoundException.class,
-                () -> turnoService.reservarTurno(cliente.getId(), profesionalInexistente, fechaHora)
+                () -> turnoService.reservar(cliente.getId(), profesionalInexistente, fechaHora)
         );
 
         assertEquals("Profesional no encontrado", ex.getMessage());
     }
 
     @Test
-    void reservarTurno_CuandoClienteNoExiste_DeberiaLanzarExcepcion() {
+    void reservar_CuandoClienteNoExiste_DeberiaLanzarExcepcion() {
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
         LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
@@ -100,14 +100,14 @@ public class TurnoServiceTests extends IntegrationTests {
 
         EntityNotFoundException ex = assertThrows(
                 EntityNotFoundException.class,
-                () -> turnoService.reservarTurno(clienteInexistente, profesional.getId(), fechaHora)
+                () -> turnoService.reservar(clienteInexistente, profesional.getId(), fechaHora)
         );
 
         assertEquals("Cliente no encontrado", ex.getMessage());
     }
 
     @Test
-    void reservarTurno_CuandoTurnoNoEstaDisponible_DeberiaLanzarExcepcion() {
+    void reservarTurno_CuandoNoEstaDisponible_DeberiaLanzarExcepcion() {
         Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
@@ -117,9 +117,60 @@ public class TurnoServiceTests extends IntegrationTests {
 
         IllegalStateException ex = assertThrows(
                 IllegalStateException.class,
-                () -> turnoService.reservarTurno(cliente.getId(), profesional.getId(), fechaHora)
+                () -> turnoService.reservar(cliente.getId(), profesional.getId(), fechaHora)
         );
 
         assertEquals("El turno no está disponible", ex.getMessage());
     }
+
+    @Test
+    void cancelarTurno_deberiaLiberarTurnoReservado() {
+        Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
+        Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
+        Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
+        Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
+        LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
+        Turno turno = TurnoBuilder.basic(profesional, fechaHora).withEstado(EstadoTurno.RESERVADO).withCliente(cliente).build(entityManager);
+
+        turnoService.cancelar(turno.getId(), cliente.getId());
+
+        Turno turnoCancelado = turnoRepository.findById(turno.getId())
+                .orElseThrow();
+
+        assertNull(turnoCancelado.getCliente());
+        assertEquals(EstadoTurno.DISPONIBLE, turnoCancelado.getEstado());
+    }
+
+    @Test
+    void cancelarTurno_deberiaLanzarExcepcion_SiTurnoNoExiste() {
+        Usuario usuario = UsuarioBuilder.basic().cliente().build(entityManager);
+        Cliente cliente = ClienteBuilder.basic(usuario).build(entityManager);
+        Long turnoIdInexistente = -1L;
+
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () ->
+                turnoService.cancelar(turnoIdInexistente, cliente.getId())
+        );
+
+        assertEquals("Turno no encontrado", exception.getMessage());
+    }
+
+    @Test
+    void cancelarTurno_deberiaLanzarExcepcion_SiTurnoNoPerteneceAlCliente() {
+        Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
+        Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
+        Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
+        Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
+        LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
+        Turno turno = TurnoBuilder.basic(profesional, fechaHora).withEstado(EstadoTurno.RESERVADO).withCliente(cliente).build(entityManager);
+        Cliente otroCliente = ClienteBuilder.basic(usuario1).build(entityManager);
+
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                turnoService.cancelar(turno.getId(), otroCliente.getId())
+        );
+
+        assertEquals("El turno no pertenece al cliente", exception.getMessage());
+    }
+
+
 }

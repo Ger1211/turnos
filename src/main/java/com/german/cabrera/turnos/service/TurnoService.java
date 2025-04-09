@@ -23,7 +23,7 @@ public class TurnoService {
     private final TurnoRepository turnoRepository;
 
     @Transactional
-    public Turno reservarTurno(Long clienteId, Long profesionalId, LocalDateTime fechaHora) {
+    public Turno reservar(Long clienteId, Long profesionalId, LocalDateTime fechaHora) {
         Profesional profesional = obtenerProfesional(profesionalId);
         Turno turno = obtenerTurnoDisponible(profesional, fechaHora);
         Cliente cliente = obtenerCliente(clienteId);
@@ -32,6 +32,25 @@ public class TurnoService {
         turno.setEstado(EstadoTurno.RESERVADO);
 
         return turnoRepository.save(turno);
+    }
+
+    public void cancelar(Long turnoId, Long clienteId) {
+        Turno turno = obtenerTurnoDeCliente(turnoId, clienteId);
+
+        turno.setEstado(EstadoTurno.DISPONIBLE);
+        turno.setCliente(null);
+
+        turnoRepository.save(turno);
+    }
+
+    private Turno obtenerTurnoDeCliente(Long turnoId, Long clienteId) {
+        Turno turno = turnoRepository.findById(turnoId)
+                .orElseThrow(() -> new EntityNotFoundException("Turno no encontrado"));
+
+        if(!turno.getCliente().getId().equals(clienteId)) {
+            throw new IllegalStateException("El turno no pertenece al cliente");
+        }
+        return turno;
     }
 
     private Profesional obtenerProfesional(Long profesionalId) {
