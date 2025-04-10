@@ -1,4 +1,4 @@
-package com.german.cabrera.turnos.dto;
+package com.german.cabrera.turnos.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

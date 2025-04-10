@@ -1,8 +1,8 @@
 package com.german.cabrera.turnos.service;
 
 import com.german.cabrera.turnos.security.service.JwtService;
-import com.german.cabrera.turnos.dto.AuthResponse;
-import com.german.cabrera.turnos.dto.AuthRequest;
+import com.german.cabrera.turnos.dto.auth.AuthResponse;
+import com.german.cabrera.turnos.dto.auth.AuthRequest;
 import com.german.cabrera.turnos.model.Usuario;
 import com.german.cabrera.turnos.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;

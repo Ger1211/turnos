@@ -2,8 +2,8 @@ package com.german.cabrera.turnos.integration.service;
 
 
 import com.german.cabrera.turnos.builder.UsuarioBuilder;
-import com.german.cabrera.turnos.dto.AuthRequest;
-import com.german.cabrera.turnos.dto.AuthResponse;
+import com.german.cabrera.turnos.dto.auth.AuthRequest;
+import com.german.cabrera.turnos.dto.auth.AuthResponse;
 import com.german.cabrera.turnos.service.AuthService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;

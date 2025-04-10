@@ -1,6 +1,6 @@
 package com.german.cabrera.turnos.controller;
 
-import com.german.cabrera.turnos.dto.AuthRequest;
+import com.german.cabrera.turnos.dto.auth.AuthRequest;
 import com.german.cabrera.turnos.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

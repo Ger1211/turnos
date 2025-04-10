@@ -1,9 +1,6 @@
 package com.german.cabrera.turnos.integration.service;
 
-import com.german.cabrera.turnos.builder.ClienteBuilder;
-import com.german.cabrera.turnos.builder.ProfesionalBuilder;
-import com.german.cabrera.turnos.builder.TurnoBuilder;
-import com.german.cabrera.turnos.builder.UsuarioBuilder;
+import com.german.cabrera.turnos.builder.*;
 import com.german.cabrera.turnos.model.*;
 import com.german.cabrera.turnos.repository.TurnoRepository;
 import com.german.cabrera.turnos.service.TurnoService;
@@ -14,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
 
@@ -37,53 +34,54 @@ public class TurnoServiceTests extends IntegrationTests {
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
         Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
-        LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
-        TurnoBuilder.basic(profesional, fechaHora).withEstado(EstadoTurno.DISPONIBLE).build(entityManager);
+        LocalDate fecha = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY));
+        LocalTime hora = LocalTime.now().withHour(9).withMinute(0);
+        DisponibilidadBuilder.basic(profesional, fecha.getDayOfWeek(), hora, hora.plusHours(8)).build(entityManager);
 
-        Turno turno = turnoService.reservar(cliente.getId(), profesional.getId(), fechaHora);
+        Turno turno = turnoService.reservar(cliente.getId(), profesional.getId(), fecha, hora);
 
         assertNotNull(turno);
         assertEquals(cliente.getId(), turno.getCliente().getId());
-        assertEquals(profesional.getId(), turno.getProfesional().getId());
-        assertEquals(fechaHora, turno.getFechaHora());
-        assertEquals(EstadoTurno.RESERVADO, turno.getEstado());
+        assertEquals(profesional.getId(), turno.getDisponibilidad().getProfesional().getId());
+        assertEquals(fecha, turno.getFecha());
+        assertEquals(hora, turno.getHora());
 
         Optional<Turno> turnoEnDB = turnoRepository.findById(turno.getId());
         assertTrue(turnoEnDB.isPresent());
     }
 
     @Test
-    void reservarTurno_CuandoNoExiste_DeberiaLanzarExcepcion() {
+    void reservarTurno_CuandoNoHayDisponibilidad_DeberiaLanzarExcepcion() {
         Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
         Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
-        LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
-        TurnoBuilder.basic(profesional, fechaHora).withEstado(EstadoTurno.DISPONIBLE).build(entityManager);
+        LocalDate fecha = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY));
+        LocalTime hora = LocalTime.now().withHour(9).withMinute(0);
+        DisponibilidadBuilder.basic(profesional, fecha.getDayOfWeek(), hora, hora.plusHours(8)).build(entityManager);
 
-        LocalDateTime fechaErronea = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.FRIDAY)).atTime(9, 30);
+        LocalDate fechaErronea = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.FRIDAY));
 
         EntityNotFoundException ex = assertThrows(
                 EntityNotFoundException.class,
-                () -> turnoService.reservar(cliente.getId(), profesional.getId(), fechaErronea)
+                () -> turnoService.reservar(cliente.getId(), profesional.getId(), fechaErronea, hora)
         );
 
-        assertEquals("Turno no encontrado para ese profesional en esa fecha y hora", ex.getMessage());
+        assertEquals("El profesional no tiene disponiblidad", ex.getMessage());
     }
 
     @Test
     void reservar_CuandoProfesionalNoExiste_DeberiaLanzarExcepcion() {
         Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
-        Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
-        Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
-        LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
-        TurnoBuilder.basic(profesional, fechaHora).withEstado(EstadoTurno.DISPONIBLE).build(entityManager);
+        LocalDate fecha = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY));
+        LocalTime hora = LocalTime.now().withHour(9).withMinute(0);
+
         Long profesionalInexistente = -1L;
 
         EntityNotFoundException ex = assertThrows(
                 EntityNotFoundException.class,
-                () -> turnoService.reservar(cliente.getId(), profesionalInexistente, fechaHora)
+                () -> turnoService.reservar(cliente.getId(), profesionalInexistente, fecha, hora)
         );
 
         assertEquals("Profesional no encontrado", ex.getMessage());
@@ -93,14 +91,15 @@ public class TurnoServiceTests extends IntegrationTests {
     void reservar_CuandoClienteNoExiste_DeberiaLanzarExcepcion() {
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
-        LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
-        TurnoBuilder.basic(profesional, fechaHora).withEstado(EstadoTurno.DISPONIBLE).build(entityManager);
+        LocalDate fecha = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY));
+        LocalTime hora = LocalTime.now().withHour(9).withMinute(0);
+        DisponibilidadBuilder.basic(profesional, fecha.getDayOfWeek(), hora, hora.plusHours(8)).build(entityManager);
 
         Long clienteInexistente = -1L;
 
         EntityNotFoundException ex = assertThrows(
                 EntityNotFoundException.class,
-                () -> turnoService.reservar(clienteInexistente, profesional.getId(), fechaHora)
+                () -> turnoService.reservar(clienteInexistente, profesional.getId(), fecha, hora)
         );
 
         assertEquals("Cliente no encontrado", ex.getMessage());
@@ -110,18 +109,66 @@ public class TurnoServiceTests extends IntegrationTests {
     void reservarTurno_CuandoNoEstaDisponible_DeberiaLanzarExcepcion() {
         Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
+        Usuario usuario3 = UsuarioBuilder.basic().profesional().build(entityManager);
         Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
+        Cliente otroCliente = ClienteBuilder.basic(usuario3).build(entityManager);
         Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
-        LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
-        TurnoBuilder.basic(profesional, fechaHora).withEstado(EstadoTurno.RESERVADO).build(entityManager);
+        LocalDate fecha = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY));
+        LocalTime hora = LocalTime.now().withHour(9).withMinute(0);
+        Disponibilidad disponibilidad = DisponibilidadBuilder.basic(profesional, fecha.getDayOfWeek(), hora, hora.plusHours(8)).build(entityManager);
+        TurnoBuilder.basic(disponibilidad, fecha, hora).withCliente(otroCliente).build(entityManager);
 
-        IllegalStateException ex = assertThrows(
+        IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
-                () -> turnoService.reservar(cliente.getId(), profesional.getId(), fechaHora)
+                () -> turnoService.reservar(cliente.getId(), profesional.getId(), fecha, hora)
         );
 
-        assertEquals("El turno no está disponible", ex.getMessage());
+        assertEquals("El turno no está disponible", exception.getMessage());
     }
+
+    @Test
+    void reservarTurno_clienteYaTieneTurnoEnLaMismaFechaYHora_debeLanzarExcepcion() {
+        Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
+        Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
+        Usuario usuario3 = UsuarioBuilder.basic().profesional().build(entityManager);
+        Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
+        Profesional profesional1 = ProfesionalBuilder.basic(usuario2).build(entityManager);
+        Profesional profesional2 = ProfesionalBuilder.basic(usuario3).build(entityManager);
+
+        LocalDate fecha = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY));
+        LocalTime hora = LocalTime.now().withHour(9).withMinute(0);
+
+        Disponibilidad disponibilidad = DisponibilidadBuilder.basic(profesional1, fecha.getDayOfWeek(), hora, hora.plusHours(8)).build(entityManager);
+        DisponibilidadBuilder.basic(profesional2, fecha.getDayOfWeek(), hora, hora.plusHours(8)).build(entityManager);
+
+        TurnoBuilder.basic(disponibilidad, fecha, hora).withCliente(cliente).build(entityManager);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                turnoService.reservar(cliente.getId(), profesional2.getId(), fecha, hora)
+        );
+
+        assertEquals("El cliente ya tiene un turno reservado en esa fecha y hora", exception.getMessage());
+    }
+
+    @Test
+    void reservarTurno_FechaPasada_deberiaLanzarExcepcion() {
+        Usuario usuario1 = UsuarioBuilder.basic().cliente().build(entityManager);
+        Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
+        Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
+        Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
+
+        LocalDate fecha = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.TUESDAY));
+        LocalTime hora = LocalTime.now().withHour(9);
+
+        DisponibilidadBuilder.basic(profesional, fecha.getDayOfWeek(), hora, hora.plusHours(8)).build(entityManager);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                turnoService.reservar(cliente.getId(), profesional.getId(), fecha, hora)
+        );
+
+        assertEquals("No se puede reservar un turno en una fecha pasada", exception.getMessage());
+    }
+
 
     @Test
     void cancelarTurno_deberiaLiberarTurnoReservado() {
@@ -129,16 +176,15 @@ public class TurnoServiceTests extends IntegrationTests {
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
         Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
-        LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
-        Turno turno = TurnoBuilder.basic(profesional, fechaHora).withEstado(EstadoTurno.RESERVADO).withCliente(cliente).build(entityManager);
+        LocalDate fecha = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY));
+        LocalTime hora = LocalTime.now().withHour(9);
+        Disponibilidad disponibilidad = DisponibilidadBuilder.basic(profesional, fecha.getDayOfWeek(), hora, hora.plusHours(8)).build(entityManager);
+        Turno turno = TurnoBuilder.basic(disponibilidad, fecha, hora).withCliente(cliente).build(entityManager);
 
         turnoService.cancelar(turno.getId(), cliente.getId());
 
-        Turno turnoCancelado = turnoRepository.findById(turno.getId())
-                .orElseThrow();
-
-        assertNull(turnoCancelado.getCliente());
-        assertEquals(EstadoTurno.DISPONIBLE, turnoCancelado.getEstado());
+        Optional<Turno> turnoEnDB = turnoRepository.findById(turno.getId());
+        assertFalse(turnoEnDB.isPresent());
     }
 
     @Test
@@ -160,8 +206,10 @@ public class TurnoServiceTests extends IntegrationTests {
         Usuario usuario2 = UsuarioBuilder.basic().profesional().build(entityManager);
         Cliente cliente = ClienteBuilder.basic(usuario1).build(entityManager);
         Profesional profesional = ProfesionalBuilder.basic(usuario2).build(entityManager);
-        LocalDateTime fechaHora = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY)).atTime(9, 30);
-        Turno turno = TurnoBuilder.basic(profesional, fechaHora).withEstado(EstadoTurno.RESERVADO).withCliente(cliente).build(entityManager);
+        LocalDate fecha = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.TUESDAY));
+        LocalTime hora = LocalTime.now().withHour(9);
+        Disponibilidad disponibilidad = DisponibilidadBuilder.basic(profesional, fecha.getDayOfWeek(), hora, hora.plusHours(8)).build(entityManager);
+        Turno turno = TurnoBuilder.basic(disponibilidad, fecha, hora).withCliente(cliente).build(entityManager);
         Cliente otroCliente = ClienteBuilder.basic(usuario1).build(entityManager);
 
 

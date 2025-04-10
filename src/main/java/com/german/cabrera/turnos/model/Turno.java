@@ -1,15 +1,23 @@
 package com.german.cabrera.turnos.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Turno {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -17,14 +25,14 @@ public class Turno {
     private Cliente cliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "profesional_id", nullable = false)
-    private Profesional profesional;
+    @JoinColumn(name = "disponibilidad_id", nullable = false)
+    private Disponibilidad disponibilidad;
 
     @Column(nullable = false)
-    private LocalDateTime fechaHora;
+    private LocalDate fecha;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EstadoTurno estado;
+    private LocalTime hora;
 }
+
 

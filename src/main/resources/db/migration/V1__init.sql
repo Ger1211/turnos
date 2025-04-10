@@ -36,12 +36,13 @@ CREATE TABLE disponibilidad (
 
 CREATE TABLE turno (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    cliente_id BIGINT,
+    disponibilidad_id BIGINT NOT NULL,
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
-    profesional_id BIGINT,
-    cliente_id BIGINT,
-    cancelado BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (profesional_id) REFERENCES profesional(id),
-    FOREIGN KEY (cliente_id) REFERENCES cliente(id),
-    CONSTRAINT unique_turno UNIQUE (fecha, hora, profesional_id)
+    CONSTRAINT fk_turno_cliente FOREIGN KEY (cliente_id) REFERENCES cliente(id),
+    CONSTRAINT fk_turno_disponibilidad FOREIGN KEY (disponibilidad_id) REFERENCES disponibilidad(id),
+    CONSTRAINT unique_turno UNIQUE (disponibilidad_id, fecha, hora)
 );
+
+
