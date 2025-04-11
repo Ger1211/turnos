@@ -8,13 +8,14 @@ import com.german.cabrera.turnos.service.TurnoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.DayOfWeek;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/turnos")
 @RequiredArgsConstructor
+@RequestMapping("/api/turnos")
 public class TurnoController {
 
     private final TurnoService turnoService;
@@ -38,12 +39,6 @@ public class TurnoController {
 
         turnoService.cancelar(request.getTurnoId(), request.getClienteId());
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/disponibilidades")
-    @PreAuthorize("hasAnyRole('CLIENTE', 'ADMIN')")
-    public ResponseEntity<?> consultarDisponilibilidad(@RequestParam Long profesionalId, @RequestParam DayOfWeek dia) {
-        return ResponseEntity.ok(turnoService.consultarDisponibilidad(profesionalId, dia));
     }
 }
 
