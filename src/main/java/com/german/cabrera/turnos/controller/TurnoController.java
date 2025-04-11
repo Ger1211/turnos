@@ -1,8 +1,8 @@
 package com.german.cabrera.turnos.controller;
 
-import com.german.cabrera.turnos.dto.turnos.CancelarTurnoRequest;
-import com.german.cabrera.turnos.dto.turnos.ReservaTurnoRequest;
-import com.german.cabrera.turnos.dto.turnos.TurnoResponse;
+import com.german.cabrera.turnos.dto.turnos.CancelacionTurnoRequestDTO;
+import com.german.cabrera.turnos.dto.turnos.ReservacionTurnoRequestDTO;
+import com.german.cabrera.turnos.dto.turnos.TurnoResponseDTO;
 import com.german.cabrera.turnos.model.Turno;
 import com.german.cabrera.turnos.service.TurnoService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class TurnoController {
 
     @PostMapping("/reservaciones")
     @PreAuthorize("hasAnyRole('CLIENTE', 'ADMIN')")
-    public ResponseEntity<?> reservar(@RequestBody ReservaTurnoRequest request) {
+    public ResponseEntity<?> reservar(@RequestBody ReservacionTurnoRequestDTO request) {
         Turno turno = turnoService.reservar(
                 request.getClienteId(),
                 request.getProfesionalId(),
@@ -30,12 +30,12 @@ public class TurnoController {
                 request.getHora()
         );
 
-        return ResponseEntity.ok(TurnoResponse.from(turno));
+        return ResponseEntity.ok(TurnoResponseDTO.from(turno));
     }
 
     @PostMapping("/cancelaciones")
     @PreAuthorize("hasAnyRole('CLIENTE', 'ADMIN')")
-    public ResponseEntity<Void> cancelar(@RequestBody CancelarTurnoRequest request) {
+    public ResponseEntity<Void> cancelar(@RequestBody CancelacionTurnoRequestDTO request) {
 
         turnoService.cancelar(request.getTurnoId(), request.getClienteId());
         return ResponseEntity.noContent().build();

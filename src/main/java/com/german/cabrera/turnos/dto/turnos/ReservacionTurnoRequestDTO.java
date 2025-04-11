@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Data
-public class ReservaTurnoRequest {
+public class ReservacionTurnoRequestDTO {
     private Long clienteId;
     private Long profesionalId;
     private LocalDate fecha;

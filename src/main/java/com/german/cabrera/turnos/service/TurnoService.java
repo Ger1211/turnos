@@ -21,16 +21,17 @@ import java.time.LocalTime;
 @RequiredArgsConstructor
 public class TurnoService {
 
+    private final TurnoRepository turnoRepository;
     private final ClienteRepository clienteRepository;
     private final ProfesionalRepository profesionalRepository;
-    private final TurnoRepository turnoRepository;
     private final DisponibilidadRepository disponibilidadRepository;
+    private final ProfesionalService profesionalService;
 
     @Transactional
     public Turno reservar(Long clienteId, Long profesionalId, LocalDate fecha, LocalTime hora) {
         validarFecha(fecha, hora);
 
-        Profesional profesional = obtenerProfesional(profesionalId);
+        Profesional profesional = profesionalService.obtener(profesionalId);
         Disponibilidad disponibilidad = obtenerDisponibilidad(profesional, fecha, hora);
         Cliente cliente = obtenerCliente(clienteId);
 
@@ -61,11 +62,6 @@ public class TurnoService {
             throw new IllegalStateException("El turno no pertenece al cliente");
         }
         return turno;
-    }
-
-    private Profesional obtenerProfesional(Long profesionalId) {
-        return profesionalRepository.findById(profesionalId)
-                .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
     }
 
     private Cliente obtenerCliente(Long clienteId) {

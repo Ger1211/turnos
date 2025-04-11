@@ -1,6 +1,7 @@
 package com.german.cabrera.turnos.service;
 
 import com.german.cabrera.turnos.dto.turnos.DisponibilidadDTO;
+import com.german.cabrera.turnos.dto.turnos.ProfesionalDTO;
 import com.german.cabrera.turnos.dto.turnos.TurnoDTO;
 import com.german.cabrera.turnos.model.Disponibilidad;
 import com.german.cabrera.turnos.model.Profesional;
@@ -26,6 +27,16 @@ public class ProfesionalService {
     private final TurnoRepository turnoRepository;
     private final ProfesionalRepository profesionalRepository;
     private final DisponibilidadRepository disponibilidadRepository;
+
+    public List<ProfesionalDTO> obtenerTodos() {
+        return profesionalRepository.findAll().stream()
+                .map(ProfesionalDTO::from)
+                .collect(Collectors.toList());
+    }
+
+    public Profesional obtener(Long profesionalId) {
+        return this.obtenerProfesional(profesionalId);
+    }
 
     public DisponibilidadDTO consultarDisponibilidad(Long profesionalId, DayOfWeek dia) {
         Profesional profesional = obtenerProfesional(profesionalId);

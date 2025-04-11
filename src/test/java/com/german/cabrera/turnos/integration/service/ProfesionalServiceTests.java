@@ -2,6 +2,7 @@ package com.german.cabrera.turnos.integration.service;
 
 import com.german.cabrera.turnos.builder.*;
 import com.german.cabrera.turnos.dto.turnos.DisponibilidadDTO;
+import com.german.cabrera.turnos.dto.turnos.ProfesionalDTO;
 import com.german.cabrera.turnos.dto.turnos.TurnoDTO;
 import com.german.cabrera.turnos.model.Cliente;
 import com.german.cabrera.turnos.model.Disponibilidad;
@@ -29,6 +30,40 @@ public class ProfesionalServiceTests extends IntegrationTests {
 
     @Autowired
     private ProfesionalService profesionaService;
+
+    @Test
+    void obtenerTodos_conProfesional_obtieneListaConProfesional() {
+        Usuario usuario = UsuarioBuilder.basic().cliente().build(entityManager);
+        Profesional profesional = ProfesionalBuilder.basic(usuario).build(entityManager);
+
+        List<ProfesionalDTO> profesionales = profesionaService.obtenerTodos();
+
+        assertFalse(profesionales.isEmpty());
+        assertEquals(1, profesionales.size());
+        assertEquals(profesional.getId(), profesionales.get(0).id());
+    }
+
+    @Test
+    void obtener_conProfesional_obtieneProfesional() {
+        Usuario usuario = UsuarioBuilder.basic().cliente().build(entityManager);
+        Profesional profesional = ProfesionalBuilder.basic(usuario).build(entityManager);
+
+        Profesional profesionalGuardado = profesionaService.obtener(profesional.getId());
+
+        assertNotNull(profesionalGuardado);
+        assertEquals(profesional.getId(), profesionalGuardado.getId());
+    }
+
+    @Test
+    void obtener_profesionalNoExiste_lanzaExcepcion() {
+        Long idInexistente = -1L;
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> {
+            profesionaService.obtener(idInexistente);
+        });
+
+        assertEquals("Profesional no encontrado", ex.getMessage());
+    }
 
     @Test
     void consultarDisponibilidad_obtieneDisponibilidadDeProfesional() {
