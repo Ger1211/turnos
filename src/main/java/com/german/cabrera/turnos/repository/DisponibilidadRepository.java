@@ -20,4 +20,6 @@ public interface DisponibilidadRepository extends JpaRepository<Disponibilidad, 
     Optional<Disponibilidad> findByProfesionalAndDiaAndHora(@Param("profesional") Profesional profesional,
                                                             @Param("dia") DayOfWeek dia,
                                                             @Param("hora") LocalTime hora);
+
+    Optional<Disponibilidad> findByProfesionalAndDia(Profesional profesional, DayOfWeek dia);
 }

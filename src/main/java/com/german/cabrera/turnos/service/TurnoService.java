@@ -1,6 +1,11 @@
 package com.german.cabrera.turnos.service;
 
-import com.german.cabrera.turnos.model.*;
+import com.german.cabrera.turnos.dto.turnos.DisponibilidadDTO;
+import com.german.cabrera.turnos.dto.turnos.TurnoDTO;
+import com.german.cabrera.turnos.model.Cliente;
+import com.german.cabrera.turnos.model.Disponibilidad;
+import com.german.cabrera.turnos.model.Profesional;
+import com.german.cabrera.turnos.model.Turno;
 import com.german.cabrera.turnos.repository.ClienteRepository;
 import com.german.cabrera.turnos.repository.DisponibilidadRepository;
 import com.german.cabrera.turnos.repository.ProfesionalRepository;
@@ -10,9 +15,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +58,14 @@ public class TurnoService {
         Turno turno = obtenerTurnoDeCliente(turnoId, clienteId);
 
         turnoRepository.delete(turno);
+    }
+
+    public DisponibilidadDTO consultarDisponibilidad(Long profesionalId, DayOfWeek dia) {
+        Profesional profesional = obtenerProfesional(profesionalId);
+        Disponibilidad disponibilidad = disponibilidadRepository.findByProfesionalAndDia(profesional, dia)
+                .orElseThrow(() -> new EntityNotFoundException("El profesional no tiene disponibilidad."));
+        List<Turno> turnos = turnoRepository.findByDisponibilidad_Profesional(profesional);
+        return obtenerTodaDisponibilidad(disponibilidad, turnos);
     }
 
     private Turno obtenerTurnoDeCliente(Long turnoId, Long clienteId) {
@@ -101,4 +119,34 @@ public class TurnoService {
         }
     }
 
+    private DisponibilidadDTO obtenerTodaDisponibilidad(Disponibilidad disponibilidad, List<Turno> turnosReservados) {
+        Set<LocalTime> horasReservadas = turnosReservados.stream()
+                .map(Turno::getHora)
+                .collect(Collectors.toSet());
+
+        List<TurnoDTO> turnosDisponibles = generarTurnosDisponibles(disponibilidad, horasReservadas);
+
+        return DisponibilidadDTO.builder()
+                .profesionalId(disponibilidad.getProfesional().getId())
+                .turnosDisponibles(turnosDisponibles)
+                .build();
+    }
+
+    private List<TurnoDTO> generarTurnosDisponibles(Disponibilidad disponibilidad, Set<LocalTime> horasReservadas) {
+        List<TurnoDTO> turnos = new ArrayList<>();
+
+        LocalTime hora = disponibilidad.getHoraInicio();
+        while (!hora.plusHours(1).isAfter(disponibilidad.getHoraFin())) {
+            if (!horasReservadas.contains(hora)) {
+                TurnoDTO turno = TurnoDTO.builder()
+                        .horaInicio(hora)
+                        .horaFin(hora.plusHours(1))
+                        .build();
+                turnos.add(turno);
+            }
+            hora = hora.plusHours(1);
+        }
+
+        return turnos;
+    }
 }
