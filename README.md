@@ -11,6 +11,7 @@ Aplicación web para la gestión de turnos en un negocio de estética (manicura,
 - Migraciones con Flyway.
 - Tests unitarios e integración con H2.
 - API REST lista para ser consumida.
+- Documentación interactiva con Swagger UI.
 
 ## 🛠️ Tecnologías
 
@@ -23,6 +24,7 @@ Aplicación web para la gestión de turnos en un negocio de estética (manicura,
 - **PostgreSQL (producción)** / **H2 (tests)**
 - **Gradle**
 - **JUnit + Mockito**
+- Springdoc OpenAPI (Swagger UI)
 
 ## 🚀 Levantar el proyecto
 
@@ -88,6 +90,20 @@ Aplicación web para la gestión de turnos en un negocio de estética (manicura,
 🧪 Tests
 
 Incluye tests unitarios y de integración. Usa H2 como base de datos en memoria durante los tests para mayor velocidad y aislamiento.
+
+📘 Swagger UI
+
+La documentación de la API está disponible en una interfaz interactiva gracias a Swagger UI.
+
+🔗 Acceso
+Una vez que la aplicación está corriendo, podés acceder a:
+
+[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+
+O directamente:
+
+[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+
 
 📜 Licencia
 
